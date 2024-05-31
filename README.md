@@ -12,3 +12,4 @@ Consumers will pull the data into their reporting engine, where they can add map
 - [ ] Stabilise the minimum core set of categories
 - [ ] Script to auto-build the full name
 - [ ] Hosted UI to build out the initial set of version 0
+- [ ] Script to convert the TSV into a mySQL query for easy consumption
