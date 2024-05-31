@@ -1,2 +1,8 @@
 ID	ParentId	Name	Emission factor	Note
-1	0	Domestic & Home	1	Note
+1	0	Home & garden	1	Note
+2	0	Tools & machinery
+3	0	Sports equipment
+4	0	Toys
+5	0	Educational
+6	0	Clothing
+7	0	Vehicles & accessories
