@@ -10,3 +10,5 @@ Consumers will pull the data into their reporting engine, where they can add map
 
 - [ ] Figure out translations
 - [ ] Stabilise the minimum core set of categories
+- [ ] Script to auto-build the full name
+- [ ] Hosted UI to build out the initial set of version 0
