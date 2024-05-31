@@ -50,25 +50,45 @@ if (isset($_GET['delete'])) {
 }
 
 // Create a new entry
-if (isset($_POST['name'])) {
-    $name = $_POST['name'];
+if (isset($_POST['submit']) && $_POST['submit'] == "Add") {
+    $name   = $_POST['name'];
+    $note   = $_POST['note'];
+    $factor = $_POST['emission_factor'];
+    if (!$factor) {
+        $factor = 'null';
+    }
     if ($selectedParentId) {
-        $stmt = $conn->prepare("INSERT INTO item_type (parent_id, name) VALUES ({$selectedParentId}, '{$name}')");
+        $stmt = $conn->prepare("INSERT INTO item_type (parent_id, name, emission_factor, note) VALUES ({$selectedParentId}, '{$name}', {$factor}, '{$note}')");
     } else {
-        $stmt = $conn->prepare("INSERT INTO item_type (parent_id, name) VALUES (null, '{$name}')");
+        $stmt = $conn->prepare("INSERT INTO item_type (parent_id, name, emission_factor, note) VALUES (null, '{$name}', {$factor}, '{$note}')");
     }
     $stmt->execute();
-    header("Location: /builder.php?parent_id=".$selectedParentId);
+    header("Location: /builder.php?parent_id=".$selectedParentId."&added");
     die();
 }
 
-$stmt = $conn->prepare("SELECT * FROM item_type");
+// Update an entry
+if (isset($_POST['submit']) && $_POST['submit'] == "Update") {
+    $name   = $_POST['name'];
+    $note   = $_POST['note'];
+    $factor = $_POST['emission_factor'];
+    if (!$factor) {
+        $factor = 'null';
+    }
+    $stmt = $conn->prepare("UPDATE item_type SET name = '{$name}', emission_factor = {$factor}, note = '{$note}' WHERE id = '{$selectedParentId}'");
+    $stmt->execute();
+    header("Location: /builder.php?parent_id=".$selectedParentId."&updated");
+    die();
+}
+
+$stmt = $conn->prepare("SELECT * FROM item_type ORDER BY parent_id, name");
 $stmt->execute();
 $result = $stmt->setFetchMode(PDO::FETCH_ASSOC);
 $results = $stmt->fetchAll();
 
 $selected = [];
 $data = [];
+$activeType = [];
 
 // Get all results in whatever order they come out
 foreach ($results as $row) {
@@ -81,6 +101,10 @@ foreach ($results as $row) {
 
     if ((int)$parentId == (int)$selectedParentId) {
         $selected[] = $row;
+    }
+
+    if ($id == (int)$selectedParentId) {
+        $activeType = $row;
     }
 
     $row['children'] = [];
@@ -122,17 +146,26 @@ $d = array_filter($data, function($elem) {
         ul {
             padding-left: 10px;
         }
+        table.update-form td {
+            background-color: #aaa;
+        }
+        .line-note {
+            font-size: 11px; color: #aaa;
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h3>
-        Taxonomy explorer
-        <span class="pull-right">
-            <a style="font-size: 12px;" href="builder.php">Home</a>
+    <br>
+    <h3>Libraries Of Things <strong>Taxonomy manager</strong> &nbsp;&nbsp;&nbsp;&nbsp;
+        <span style="font-size: 12px;">
+            <a href="builder.php">Root</a>
+            <?php if ($selectedParentId && $activeType['parent_id']) { ?>
+                &raquo; <a href="builder.php?parent_id=<?php echo $itemTypes[(int)$activeType['parent_id']]['id']; ?>"><?php echo $itemTypes[(int)$activeType['parent_id']]['name']; ?></a>
+                &raquo; <?php echo $activeType['name']; ?>
+            <?php } ?>
         </span>
     </h3>
-
 <!--    <pre>-->
 <!--        --><?php //print_r($d); ?>
 <!--    </pre>-->
@@ -169,6 +202,24 @@ $d = array_filter($data, function($elem) {
                 ?>
         </div>
         <div class="col-md-9">
+            <?php
+                if ($selectedParentId) {
+                    ?>
+                    <div>
+                        <form method="POST">
+                            <table class="table update-form">
+                                <tr>
+                                    <td><input type="text" class="form-control" name="name" value="<?php echo $activeType['name']; ?>"></td>
+                                    <td><input type="text" class="form-control" placeholder="Note" name="note" value="<?php echo $activeType['note']; ?>"></td>
+                                    <td style="width: 80px"><input type="text" size="4" class="form-control" placeholder="Emission Factor" name="emission_factor" value="<?php echo $activeType['emission_factor']; ?>"></td>
+                                    <td><input type="submit" name="submit" value="Update" class="btn btn-sm btn-success"></td>
+                                </tr>
+                            </table>
+                        </form>
+                    </div>
+                    <?php
+                }
+            ?>
             <form method="POST">
                 <table class="table table-compact table-striped">
                     <thead>
@@ -176,7 +227,8 @@ $d = array_filter($data, function($elem) {
                         <th style="width: 10px">ID</th>
                         <th style="width: 50px">Parent&nbsp;ID</th>
                         <th>Name</th>
-                        <th style="width: 50px">Factor</th>
+                        <th>Note</th>
+                        <th style="width: 50px">Emissions&nbsp;factor</th>
                         <th></th>
                     </tr>
                     </thead>
@@ -189,6 +241,7 @@ $d = array_filter($data, function($elem) {
                         echo '<a href="/builder.php?parent_id='.$type['id'].'&parent_name='.$type['name'].'">'.$type['name'].'</a> &nbsp;&nbsp;&nbsp;';
                         echo '<a class="pull-right" href="builder.php?parent_id='.$type['parent_id'].'&delete='.$type['id'].'">delete</a>';
                         echo '</td>';
+                        echo '<td class="line-note">'.$type['note'].'</td>';
                         echo '<td>'.$type['emission_factor'].'</td>';
                         echo '<td></td>';
                         echo '</tr>';
@@ -197,8 +250,9 @@ $d = array_filter($data, function($elem) {
                     <tr>
                         <td></td>
                         <td></td>
-                        <td><input type="text" name="name" class="form-control"></td>
-                        <td><input type="text" name="emission_factor" class="form-control"></td>
+                        <td><input type="text" placeholder="Name" name="name" class="form-control"></td>
+                        <td><input type="text" placeholder="Note/Keywords" name="note" class="form-control"></td>
+                        <td style="width: 80px"><input type="text" name="emission_factor" class="form-control"></td>
                         <td>
                             <input type="submit" name="submit" value="Add" class="btn btn-sm btn-success">
                         </td>
