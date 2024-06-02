@@ -1,20 +1,9 @@
 <?php
 /**
+ * This is a very basic PHP file to manage the database quickly and easily
+ *
  * On a Mac, run php -S localhost:8000
  * Then http://localhost:8000/builder.php
-
-DROP TABLE `item_type`;
-CREATE TABLE `item_type` (
-`id` int(11) NOT NULL AUTO_INCREMENT,
-`parent_id` int(11) DEFAULT NULL,
-`name` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
-`emission_factor` decimal(10,2) DEFAULT NULL,
-`note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-PRIMARY KEY (`id`),
-KEY `IDX_44EE13D2727ACA70` (`parent_id`),
-CONSTRAINT `FK_44EE13D2727ACA70` FOREIGN KEY (`parent_id`) REFERENCES `item_type` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
  */
 
 $servername = "localhost";
@@ -157,7 +146,7 @@ $d = array_filter($data, function($elem) {
 <body>
 <div class="container">
     <br>
-    <h3>Libraries Of Things <strong>Taxonomy manager</strong> &nbsp;&nbsp;&nbsp;&nbsp;
+    <h3>Libraries Of Things &nbsp;&nbsp; <strong>Taxonomy manager</strong> &nbsp;&nbsp;&nbsp;&nbsp;
         <span style="font-size: 12px;">
             <a href="builder.php">Root</a>
             <?php if ($selectedParentId && $activeType['parent_id']) { ?>
@@ -166,9 +155,6 @@ $d = array_filter($data, function($elem) {
             <?php } ?>
         </span>
     </h3>
-<!--    <pre>-->
-<!--        --><?php //print_r($d); ?>
-<!--    </pre>-->
 
     <div class="row">
         <div class="col-md-3">
@@ -205,30 +191,32 @@ $d = array_filter($data, function($elem) {
             <?php
                 if ($selectedParentId) {
                     ?>
-                    <div>
+                    <hr>
                         <form method="POST">
-                            <table class="table update-form">
+                            <table style="width: 100%" cellpadding="4">
                                 <tr>
                                     <td><input type="text" class="form-control" name="name" value="<?php echo $activeType['name']; ?>"></td>
                                     <td><input type="text" class="form-control" placeholder="Note" name="note" value="<?php echo $activeType['note']; ?>"></td>
-                                    <td style="width: 80px"><input type="text" size="4" class="form-control" placeholder="Emission Factor" name="emission_factor" value="<?php echo $activeType['emission_factor']; ?>"></td>
-                                    <td><input type="submit" name="submit" value="Update" class="btn btn-sm btn-success"></td>
+                                    <td style="width: 80px"><input type="text" size="4" class="form-control" placeholder="EF" name="emission_factor" value="<?php echo $activeType['emission_factor']; ?>"></td>
+                                    <td>
+                                        <input type="submit" name="submit" value="Update" class="btn btn-sm btn-success float-right">
+                                    </td>
                                 </tr>
                             </table>
                         </form>
-                    </div>
+                    <hr>
                     <?php
                 }
             ?>
             <form method="POST">
-                <table class="table table-compact table-striped">
+                <table class="table table-compact table-striped table-hover">
                     <thead>
                     <tr>
                         <th style="width: 10px">ID</th>
-                        <th style="width: 50px">Parent&nbsp;ID</th>
                         <th>Name</th>
                         <th>Note</th>
                         <th style="width: 50px">Emissions&nbsp;factor</th>
+                        <th></th>
                         <th></th>
                     </tr>
                     </thead>
@@ -236,23 +224,22 @@ $d = array_filter($data, function($elem) {
                     foreach($selected as $id => $type) {
                         echo '<tr>';
                         echo '<td>'.$type['id'].'</td>';
-                        echo '<td>'.$type['parent_id'].'</td>';
                         echo '<td>';
                         echo '<a href="/builder.php?parent_id='.$type['id'].'&parent_name='.$type['name'].'">'.$type['name'].'</a> &nbsp;&nbsp;&nbsp;';
-                        echo '<a class="pull-right" href="builder.php?parent_id='.$type['parent_id'].'&delete='.$type['id'].'">delete</a>';
                         echo '</td>';
                         echo '<td class="line-note">'.$type['note'].'</td>';
                         echo '<td>'.$type['emission_factor'].'</td>';
                         echo '<td></td>';
+                        echo '<td><a class="pull-right" href="builder.php?parent_id='.$type['parent_id'].'&delete='.$type['id'].'">delete</a></td>';
                         echo '</tr>';
                     }
                     ?>
                     <tr>
                         <td></td>
-                        <td></td>
                         <td><input type="text" placeholder="Name" name="name" class="form-control"></td>
                         <td><input type="text" placeholder="Note/Keywords" name="note" class="form-control"></td>
                         <td style="width: 80px"><input type="text" name="emission_factor" class="form-control"></td>
+                        <td></td>
                         <td>
                             <input type="submit" name="submit" value="Add" class="btn btn-sm btn-success">
                         </td>
